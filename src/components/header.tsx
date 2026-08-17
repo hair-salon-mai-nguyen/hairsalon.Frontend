@@ -43,6 +43,7 @@ export const Header: React.FC = () => {
   ];
 
   return (
+    <>
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
         isScrolled
@@ -108,39 +109,40 @@ export const Header: React.FC = () => {
           {isOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
-
-      {/* Mobile Menu Drawer */}
-      {isOpen && (
-        <div className="md:hidden fixed inset-0 top-[73px] bg-background/95 backdrop-blur-lg z-40 border-t border-dark-border animate-fade-in">
-          <nav className="flex flex-col space-y-6 p-8">
-            {navLinks.map((link) => {
-              const isActive = pathname === link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className={`text-sm tracking-[0.2em] uppercase transition-colors ${
-                    isActive ? "text-gold-400 font-medium" : "text-neutral-300 hover:text-white"
-                  }`}
-                >
-                  {link.name}
-                </Link>
-              );
-            })}
-            <a
-              href="https://zalo.me/0912345678"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center justify-center space-x-2 text-xs tracking-wider uppercase border border-gold-500/40 px-5 py-3 rounded-full text-gold-300 hover:text-black hover:bg-gold-gradient hover:border-transparent transition-all duration-300 w-full mt-4"
-            >
-              <Phone size={12} />
-              <span>Liên Hệ Zalo</span>
-            </a>
-          </nav>
-        </div>
-      )}
     </header>
+
+    {/* Mobile Menu Drawer */}
+    {isOpen && (
+      <div className={`md:hidden fixed inset-0 ${isScrolled ? 'top-[72px]' : 'top-[88px]'} bg-background/95 backdrop-blur-lg z-40 border-t border-dark-border animate-fade-in`}>
+        <nav className="flex flex-col space-y-6 p-8">
+          {navLinks.map((link) => {
+            const isActive = pathname === link.href;
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setIsOpen(false)}
+                className={`text-sm tracking-[0.2em] uppercase transition-colors ${
+                  isActive ? "text-gold-400 font-medium" : "text-neutral-300 hover:text-white"
+                }`}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
+          <a
+            href="https://zalo.me/0912345678"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => setIsOpen(false)}
+            className="flex items-center justify-center space-x-2 text-xs tracking-wider uppercase border border-gold-500/40 px-5 py-3 rounded-full text-gold-300 hover:text-black hover:bg-gold-gradient hover:border-transparent transition-all duration-300 w-full mt-4"
+          >
+            <Phone size={12} />
+            <span>Liên Hệ Zalo</span>
+          </a>
+        </nav>
+      </div>
+    )}
+    </>
   );
 };
