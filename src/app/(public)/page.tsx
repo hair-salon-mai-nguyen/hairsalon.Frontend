@@ -1,358 +1,406 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
+import React, { useState, useMemo } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Sparkles, ArrowRight, MessageCircle, Scissors 
+} from "lucide-react";
 import { useMockStore } from "@/context/mock-store";
-import { formatPrice } from "@/utils/format";
+import { 
+  SALON_INFO, LOOKBOOK_CATEGORIES, BEFORE_AFTER_ITEMS, 
+  CRAFT_STEPS, TESTIMONIALS, SALON_VALUES 
+} from "@/constants/salon";
+import { LookbookCard } from "@/components/lookbook-card";
+import { BeforeAfterSlider } from "@/components/before-after-slider";
+import { GoogleMapSection } from "@/components/google-map-section";
 import { StarRating } from "@/components/star-rating";
-import { HairWaveCanvas } from "@/components/hair-wave-canvas";
-import { Scissors, Sparkles, ShieldCheck, HeartHandshake, ArrowRight, MessageSquare } from "lucide-react";
+import { 
+  ScrollReveal, ScrollStaggerContainer, ScrollStaggerItem 
+} from "@/components/ui/scroll-reveal";
 
 export default function HomePage() {
-  const { products, reviews } = useMockStore();
+  const { products } = useMockStore();
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [activeBeforeAfterIndex, setActiveBeforeAfterIndex] = useState(0);
 
-  // Get featured products
-  const featuredProducts = products.filter((p) => p.isFeatured).slice(0, 3);
-  
-  // Get approved reviews to display
-  const approvedReviews = reviews.filter((r) => r.status === "APPROVED").slice(0, 3);
+  const filteredProducts = useMemo(() => {
+    if (selectedCategory === "all") return products;
+    const catObj = LOOKBOOK_CATEGORIES.find((c) => c.id === selectedCategory);
+    const selectedName = catObj ? catObj.name.toLowerCase() : selectedCategory.toLowerCase();
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.8,
-        ease: [0.16, 1, 0.3, 1] as const,
-      },
-    },
-  };
+    return products.filter((p) => {
+      if (!p) return false;
+      const prodCat = (p.category || "").toLowerCase();
+      return (
+        prodCat.includes(selectedName) ||
+        selectedName.includes(prodCat) ||
+        (selectedCategory === "wavy" && (prodCat.includes("xoăn") || prodCat.includes("sóng"))) ||
+        (selectedCategory === "bob" && (prodCat.includes("bob") || prodCat.includes("ngang vai") || prodCat.includes("ngắn"))) ||
+        (selectedCategory === "straight" && (prodCat.includes("thẳng") || prodCat.includes("suôn") || prodCat.includes("layer"))) ||
+        (selectedCategory === "topper" && (prodCat.includes("mái") || prodCat.includes("đỉnh") || prodCat.includes("bạc")))
+      );
+    });
+  }, [products, selectedCategory]);
 
   return (
-    <div className="bg-background min-h-screen">
-      {/* 1. Hero Section */}
-      <section className="relative h-[90vh] min-h-[600px] flex items-center justify-center overflow-hidden border-b border-dark-border">
-        {/* Silky Hair Waves Simulation background */}
-        <HairWaveCanvas />
+    <div className="flex flex-col min-h-screen bg-[#FAF8F5]">
+      
+      <section className="relative overflow-hidden pt-8 pb-20 md:py-24 border-b border-sand-200 bg-sand-50/60">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-sand-200/40 rounded-full blur-3xl pointer-events-none -mr-32 -mt-32" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-caramel-100/30 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
 
-        {/* Ambient Dark/Gold Vignette */}
-        <div className="absolute inset-0 bg-radial-vignette pointer-events-none" />
-
-        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center space-y-8 select-none">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center space-x-2 border border-gold-500/30 bg-gold-900/10 px-4 py-1.5 rounded-full text-gold-300 text-xs tracking-widest uppercase mb-2 backdrop-blur-sm"
-          >
-            <Sparkles size={12} className="animate-pulse" />
-            <span>Thương Hiệu Tóc Giả Sang Trọng Bậc Nhất</span>
-          </motion.div>
-
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="text-4xl md:text-7xl font-serif leading-tight text-gold-gradient font-semibold uppercase tracking-wide"
-          >
-            Tuyệt Tác Tóc Giả <br />
-            100% Tóc Thật Tự Nhiên
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="max-w-2xl mx-auto text-neutral-400 text-sm md:text-base leading-relaxed tracking-wider font-light"
-          >
-            Đo may, uốn nhuộm và tạo kiểu thủ công theo yêu cầu riêng biệt. 
-            Mô phỏng lớp siêu da đầu HD thông thoáng chân thật tuyệt đối, mang lại sự kiêu hãnh tự tin cho bạn.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-4"
-          >
-            <Link
-              href="/products"
-              className="w-full sm:w-auto px-8 py-4 rounded-full bg-gold-gradient text-black font-semibold text-xs tracking-widest uppercase hover:shadow-[0_0_30px_rgba(197,155,63,0.3)] transition-all duration-300 text-center"
-            >
-              Khám Phá Sản Phẩm
-            </Link>
-            <a
-              href="https://zalo.me/0912345678"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full sm:w-auto px-8 py-4 rounded-full border border-neutral-700 bg-neutral-900/20 backdrop-blur-sm text-neutral-200 hover:text-white hover:border-gold-500 transition-colors duration-300 text-center text-xs tracking-widest uppercase flex items-center justify-center space-x-2"
-            >
-              <span>Tư Vấn Thiết Kế</span>
-              <ArrowRight size={14} />
-            </a>
-          </motion.div>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-2 opacity-50">
-          <span className="text-[9px] tracking-[0.25em] text-neutral-400 uppercase">Cuộn xuống</span>
-          <div className="w-[1px] h-12 bg-gradient-to-b from-gold-500 to-transparent" />
-        </div>
-      </section>
-
-      {/* 2. Core Values Section */}
-      <section className="py-24 max-w-7xl mx-auto px-6 border-b border-dark-border">
-        <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
-          <span className="text-xs tracking-[0.3em] uppercase text-gold-500 block">Sự Khác Biệt</span>
-          <h2 className="text-3xl md:text-4xl font-serif font-bold uppercase tracking-wider text-gold-200">
-            Triết Lý Mai Nguyễn Luxury
-          </h2>
-          <p className="text-neutral-400 text-xs md:text-sm font-light">
-            Mỗi bộ tóc giả không chỉ là một sản phẩm, mà là một tác phẩm nghệ thuật tôn vinh khí chất quý cô.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {[
-            {
-              icon: <Scissors className="text-gold-500 w-6 h-6" />,
-              title: "Tóc Thật Tuyển Chọn",
-              desc: "Sử dụng 100% tóc thật tự nhiên chưa qua hóa chất tẩy nhuộm, sợi tóc chắc khỏe, suôn mượt óng ả.",
-            },
-            {
-              icon: <Sparkles className="text-gold-500 w-6 h-6" />,
-              title: "Siêu Da Đầu HD Silk",
-              desc: "Màng lưới ren HD cao cấp siêu mỏng, tiệp hoàn hảo vào màu da đầu, thoáng khí và êm nhẹ tối đa.",
-            },
-            {
-              icon: <ShieldCheck className="text-gold-500 w-6 h-6" />,
-              title: "May Đo Cá Nhân Hóa",
-              desc: "Lấy số đo chuẩn chu vi đầu của từng khách hàng, căn chỉnh mật độ phân bổ tóc tự nhiên nhất.",
-            },
-            {
-              icon: <HeartHandshake className="text-gold-500 w-6 h-6" />,
-              title: "Bảo Hành Trọn Đời",
-              desc: "Hỗ trợ phục hồi spa tóc, uốn tạo kiểu mới, dặm thêm tóc trọn đời sản phẩm tại Hair Salon.",
-            },
-          ].map((val, idx) => (
-            <motion.div
-              key={idx}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: idx * 0.1 }}
-              className="glass-panel glass-panel-hover p-8 rounded-2xl space-y-4 border border-dark-border"
-            >
-              <div className="w-12 h-12 rounded-full border border-gold-500/20 bg-background flex items-center justify-center">
-                {val.icon}
-              </div>
-              <h3 className="font-serif text-base text-gold-200 font-semibold tracking-wider">{val.title}</h3>
-              <p className="text-neutral-400 text-xs leading-relaxed font-light">{val.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* 3. Featured Showcase */}
-      <section className="py-24 bg-dark-card/30 border-b border-dark-border">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
-            <div className="space-y-4">
-              <span className="text-xs tracking-[0.3em] uppercase text-gold-500 block">Bộ Sưu Tập Nổi Bật</span>
-              <h2 className="text-3xl md:text-4xl font-serif font-bold uppercase tracking-wider text-gold-200">
-                Tác Phẩm Đặc Sắc
-              </h2>
-            </div>
-            <Link
-              href="/products"
-              className="text-xs tracking-widest uppercase text-gold-400 hover:text-gold-300 flex items-center space-x-2 transition-colors border-b border-gold-500/40 pb-1"
-            >
-              <span>Xem tất cả sản phẩm</span>
-              <ArrowRight size={12} />
-            </Link>
-          </div>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
-          >
-            {featuredProducts.map((product) => (
-              <motion.div
-                key={product.id}
-                variants={itemVariants}
-                className="glass-panel group rounded-2xl overflow-hidden border border-dark-border flex flex-col h-full bg-background/40 hover:border-gold-500/20 transition-all duration-300"
-              >
-                {/* Image Container */}
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-900">
-                  <Image
-                    src={product.images[0]}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md border border-gold-500/30 px-3 py-1 rounded-full text-[10px] text-gold-300 uppercase tracking-widest font-semibold">
-                    {product.category}
-                  </div>
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            
+            <div className="lg:col-span-7 space-y-7 text-left">
+              <ScrollReveal direction="down" delay={0.1}>
+                <div className="inline-flex items-center space-x-2 bg-white px-4 py-1.5 rounded-full border border-sand-200 shadow-sm text-caramel-600 text-xs tracking-widest uppercase font-medium">
+                  <Sparkles size={13} className="text-caramel-500" />
+                  <span>Atelier Tóc Giả May Đo Cao Cấp</span>
                 </div>
+              </ScrollReveal>
 
-                {/* Content */}
-                <div className="p-6 flex flex-col flex-grow space-y-4 justify-between">
+              <ScrollReveal direction="up" delay={0.2}>
+                <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-bold text-espresso-900 leading-[1.15] tracking-tight">
+                  Mái tóc đẹp kể <br />
+                  <span className="italic font-normal text-caramel-600">câu chuyện & phong thái</span> <br />
+                  tự nhiên của bạn
+                </h1>
+              </ScrollReveal>
+
+              <ScrollReveal direction="up" delay={0.3}>
+                <p className="text-espresso-600 text-sm sm:text-base font-light leading-relaxed max-w-xl">
+                  Mỗi bộ tóc giả tại Mai Nguyễn là một tác phẩm thủ công độc bản từ <strong>100% tóc thật tự nhiên</strong>, kết hợp màng ren siêu tàng hình tiệp màu da đầu, mang lại vẻ đẹp thanh lịch, kiêu kỳ và bồng bềnh tự nhiên như tóc mọc từ chính cơ thể bạn.
+                </p>
+              </ScrollReveal>
+
+              <ScrollReveal direction="up" delay={0.4}>
+                <div className="flex flex-wrap items-center gap-4 pt-2">
+                  <a
+                    href={SALON_INFO.zaloUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-caramel-500 hover:bg-caramel-600 text-white font-semibold text-xs tracking-widest uppercase px-8 py-4 rounded-full shadow-md hover:shadow-lg transition-all flex items-center space-x-2 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <MessageCircle size={16} />
+                    <span>Tư Vấn May Đo Qua Zalo</span>
+                  </a>
+
+                  <Link
+                    href="/products"
+                    className="bg-white hover:bg-sand-100 text-espresso-900 border border-sand-300 font-semibold text-xs tracking-widest uppercase px-7 py-4 rounded-full shadow-sm transition-all flex items-center space-x-2 hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    <span>Xem Bộ Sưu Tập</span>
+                    <ArrowRight size={14} className="text-caramel-500" />
+                  </Link>
+                </div>
+              </ScrollReveal>
+
+              <ScrollReveal direction="up" delay={0.5}>
+                <div className="pt-6 border-t border-sand-200 grid grid-cols-3 gap-4 text-center sm:text-left">
                   <div>
-                    <h3 className="font-serif text-lg text-neutral-100 group-hover:text-gold-300 transition-colors font-medium tracking-wide line-clamp-1">
-                      {product.name}
-                    </h3>
-                    <p className="text-neutral-400 text-xs font-light line-clamp-2 leading-relaxed mt-2">
-                      {product.description}
-                    </p>
+                    <p className="font-serif text-2xl font-bold text-espresso-900">100%</p>
+                    <p className="text-[11px] text-espresso-500 uppercase tracking-wider mt-0.5">Tóc Thật Tuyển Chọn</p>
                   </div>
-
-                  <div className="flex justify-end items-center pt-4 border-t border-dark-border/40">
-                    <Link
-                      href={`/products/${product.id}`}
-                      className="text-[10px] tracking-widest uppercase text-neutral-300 group-hover:text-gold-400 group-hover:underline flex items-center space-x-1 transition-colors"
-                    >
-                      <span>Xem Chi Tiết</span>
-                      <ArrowRight size={10} />
-                    </Link>
+                  <div>
+                    <p className="font-serif text-2xl font-bold text-espresso-900">HD Lace</p>
+                    <p className="text-[11px] text-espresso-500 uppercase tracking-wider mt-0.5">Ren Siêu Tàng Hình</p>
+                  </div>
+                  <div>
+                    <p className="font-serif text-2xl font-bold text-espresso-900">Custom</p>
+                    <p className="text-[11px] text-espresso-500 uppercase tracking-wider mt-0.5">May Đo Theo Size Đầu</p>
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* 4. Brand Story Section */}
-      <section className="py-24 max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-16 items-center border-b border-dark-border">
-        <motion.div
-          initial={{ opacity: 0, x: -35 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="space-y-6"
-        >
-          <span className="text-xs tracking-[0.3em] uppercase text-gold-500 block">Hành Trình Kiến Tạo</span>
-          <h2 className="text-3xl md:text-5xl font-serif font-bold uppercase tracking-wider text-gold-200 leading-tight">
-            Mai Nguyễn <br />
-            Uốn Nắn Từng Sợi Tơ
-          </h2>
-          <p className="text-neutral-400 text-xs md:text-sm font-light leading-relaxed">
-            Chúng tôi tin rằng mái tóc chính là vương miện kiêu kỳ nhất của người phụ nữ. 
-            Tại Mai Nguyễn, mỗi sản phẩm tóc giả làm bằng tóc thật đều trải qua quy trình khử trùng sinh học, 
-            tuyển chọn thủ công nghiêm ngặt và được dệt móc bằng bàn tay lành nghề của những người thợ làm tóc giàu tâm huyết.
-          </p>
-          <p className="text-neutral-400 text-xs md:text-sm font-light leading-relaxed">
-            Cho dù bạn muốn thay đổi phong cách tạm thời, che đi khuyết điểm mái tóc hay cần một vẻ ngoài lộng lẫy nhất trong những dịp trọng đại, 
-            Mai Nguyễn luôn sẵn sàng lắng nghe và thiết kế riêng cho bạn những dáng tóc hoàn mỹ nhất.
-          </p>
-          <div className="pt-4">
-            <Link
-              href="/about"
-              className="inline-flex items-center space-x-2 text-xs tracking-widest uppercase text-gold-400 hover:text-gold-300 font-semibold transition-colors pb-1 border-b border-gold-400/30"
-            >
-              <span>Đọc Câu Chuyện Của Chúng Tôi</span>
-              <ArrowRight size={12} />
-            </Link>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 35 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="relative aspect-square md:aspect-[4/3] w-full rounded-2xl overflow-hidden border border-dark-border"
-        >
-          <Image
-            src="https://images.unsplash.com/photo-1492106087820-71f1a00d2b11?q=80&w=800&auto=format&fit=crop"
-            alt="Artisan wig maker"
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-8">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 rounded-full border border-gold-500 flex items-center justify-center bg-black/60 backdrop-blur-md">
-                <Scissors size={14} className="text-gold-500" />
-              </div>
-              <div>
-                <p className="font-serif text-sm text-gold-200 font-medium">May Đo Thủ Công 100%</p>
-                <p className="text-[10px] text-neutral-400 uppercase tracking-widest">Đo đạc theo tỉ lệ vàng khuôn mặt</p>
-              </div>
+              </ScrollReveal>
             </div>
-          </div>
-        </motion.div>
-      </section>
 
-      {/* 5. Testimonial Section */}
-      <section className="py-24 bg-dark-card/10">
-        <div className="max-w-5xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16 space-y-4">
-            <span className="text-xs tracking-[0.3em] uppercase text-gold-500 block">Phản Hồi Từ Khách Hàng</span>
-            <h2 className="text-3xl font-serif font-bold uppercase tracking-wider text-gold-200">
-              Khách Hàng Nói Gì Về Chúng Tôi
-            </h2>
-          </div>
+            <div className="lg:col-span-5">
+              <ScrollReveal direction="left" delay={0.3} duration={0.9}>
+                <div className="relative mx-auto max-w-md lg:max-w-none">
+                  <div className="relative aspect-[3/4] w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-sand-100 group">
+                    <Image
+                      src="/images/sample-chocolate-waves.jpg"
+                      alt="Mẫu tóc sóng lụa cao cấp Mai Nguyễn"
+                      fill
+                      priority
+                      sizes="(max-width: 1024px) 100vw, 40vw"
+                      className="object-cover group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-espresso-900/60 via-transparent to-transparent pointer-events-none" />
 
-          {approvedReviews.length === 0 ? (
-            <p className="text-center text-xs text-neutral-500">Chưa có đánh giá nào được phê duyệt.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {approvedReviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="glass-panel p-8 rounded-2xl space-y-6 border border-dark-border/40 relative flex flex-col justify-between"
-                >
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start">
-                      <StarRating rating={review.rating} size={14} />
-                      <MessageSquare size={16} className="text-gold-500/20" />
-                    </div>
-                    <p className="text-neutral-300 text-xs italic font-light leading-relaxed">
-                      &ldquo;{review.comment}&rdquo;
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-3 pt-6 border-t border-dark-border/40">
-                    {review.media.length > 0 && (
-                      <div className="relative w-8 h-8 rounded-full overflow-hidden shrink-0 border border-neutral-700">
-                        <Image
-                          src={review.media[0].url}
-                          alt="Review image"
-                          fill
-                          className="object-cover"
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <h4 className="font-serif text-xs text-gold-200 font-semibold">{review.userName}</h4>
-                      <p className="text-[9px] text-neutral-500 uppercase tracking-widest mt-0.5">
-                        Khách mua {review.productName.split(" - ")[0]}
+                    <div className="absolute bottom-6 left-6 right-6 text-white">
+                      <span className="bg-caramel-500 text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full">
+                        Tác Phẩm Tiêu Biểu
+                      </span>
+                      <h2 className="font-serif text-xl font-semibold mt-2">
+                        Sóng Lụa Nâu Hạt Dẻ
+                      </h2>
+                      <p className="text-xs text-sand-100 font-light mt-1">
+                        Móc thủ công từng sợi vào ren HD siêu mỏng thoáng khí
                       </p>
                     </div>
                   </div>
+
+                  <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.8, duration: 0.6 }}
+                    className="absolute -bottom-5 -left-5 bg-white p-4 rounded-2xl border border-sand-200 shadow-xl max-w-[200px] hidden sm:block"
+                  >
+                    <div className="flex items-center space-x-2 text-caramel-600">
+                      <Scissors size={16} />
+                      <span className="font-serif text-xs font-bold text-espresso-900">May Đo Riêng</span>
+                    </div>
+                    <p className="text-[10px] text-espresso-500 mt-1 leading-relaxed">
+                      Lấy 6 số đo vòng đầu chuẩn từng milimet
+                    </p>
+                  </motion.div>
                 </div>
-              ))}
+              </ScrollReveal>
             </div>
-          )}
+
+          </div>
         </div>
       </section>
+
+      <section className="py-12 bg-white border-b border-sand-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <ScrollStaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {SALON_VALUES.map((val, idx) => {
+              const Icon = val.icon;
+              return (
+                <ScrollStaggerItem key={idx}>
+                  <div className="flex items-start space-x-3.5 p-4 rounded-2xl bg-sand-50/50 border border-sand-100 hover:border-sand-200 transition-colors h-full">
+                    <div className="w-10 h-10 rounded-full bg-white border border-sand-200 flex items-center justify-center shrink-0 shadow-sm text-caramel-500">
+                      <Icon size={18} />
+                    </div>
+                    <div>
+                      <h3 className="font-serif text-sm font-bold text-espresso-900">{val.title}</h3>
+                      <p className="text-xs text-espresso-600 font-light mt-1 leading-relaxed">{val.desc}</p>
+                    </div>
+                  </div>
+                </ScrollStaggerItem>
+              );
+            })}
+          </ScrollStaggerContainer>
+        </div>
+      </section>
+
+      <section className="py-20 md:py-28 max-w-7xl mx-auto px-6 w-full">
+        <ScrollReveal direction="up" delay={0.1}>
+          <div className="text-center max-w-2xl mx-auto space-y-4 mb-12">
+            <span className="text-xs tracking-[0.25em] uppercase text-caramel-600 font-semibold block">
+              The Signature Lookbook
+            </span>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-espresso-900 leading-tight">
+              Bộ Sưu Tập Tóc Thật May Đo
+            </h2>
+            <p className="text-sm text-espresso-600 font-light leading-relaxed">
+              Rê chuột vào từng bức ảnh để xem <strong>góc nghiêng và cận cảnh da đầu siêu thật</strong>. Mỗi mẫu tóc đều có thể tinh chỉnh màu sắc và độ dài theo mong muốn của bạn.
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center gap-2.5 pt-4 max-w-3xl mx-auto">
+              {LOOKBOOK_CATEGORIES.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-4 py-2 rounded-full text-xs sm:text-[13px] tracking-wide transition-all duration-300 cursor-pointer ${
+                    selectedCategory === cat.id
+                      ? "bg-caramel-500 text-white font-semibold shadow-sm scale-105"
+                      : "bg-white text-espresso-700 hover:bg-sand-100 border border-sand-200 hover:border-caramel-300"
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </ScrollReveal>
+
+        <motion.div
+          layout
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredProducts.map((product) => (
+              <motion.div
+                key={product.id}
+                layout
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <LookbookCard product={product} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
+
+        <ScrollReveal direction="up" delay={0.2}>
+          <div className="mt-14 text-center">
+            <Link
+              href="/products"
+              className="inline-flex items-center space-x-2 bg-espresso-900 hover:bg-caramel-600 text-white font-semibold text-xs tracking-widest uppercase px-8 py-4 rounded-full transition-all shadow-md hover:scale-[1.02]"
+            >
+              <span>Khám Phá Tất Cả Mẫu Tóc Giả</span>
+              <ArrowRight size={14} />
+            </Link>
+          </div>
+        </ScrollReveal>
+      </section>
+
+      <section className="py-20 md:py-28 bg-sand-100/70 border-y border-sand-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <ScrollReveal direction="up" delay={0.1}>
+            <div className="text-center max-w-2xl mx-auto space-y-4 mb-14">
+              <span className="text-xs tracking-[0.25em] uppercase text-caramel-600 font-semibold block">
+                Trải Nghiệm Thực Tế
+              </span>
+              <h2 className="font-serif text-3xl md:text-4xl font-bold text-espresso-900 leading-tight">
+                Biến Hóa Trước & Sau Khi Đội Tóc
+              </h2>
+              <p className="text-sm text-espresso-600 font-light leading-relaxed">
+                Trực quan kiểm chứng độ chân thực của màng ren siêu da đầu và khả năng tôn dáng gương mặt của các mẫu tóc Mai Nguyễn.
+              </p>
+
+              <div className="flex items-center justify-center gap-3 pt-2">
+                {BEFORE_AFTER_ITEMS.map((item, idx) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveBeforeAfterIndex(idx)}
+                    className={`px-5 py-2 rounded-full text-xs font-medium transition-all cursor-pointer ${
+                      activeBeforeAfterIndex === idx
+                        ? "bg-caramel-500 text-white shadow-sm scale-105"
+                        : "bg-white text-espresso-700 hover:bg-sand-200 border border-sand-300"
+                    }`}
+                  >
+                    Trường hợp {idx + 1}: {item.tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </ScrollReveal>
+
+          <ScrollReveal direction="up" delay={0.2} duration={0.8}>
+            <BeforeAfterSlider item={BEFORE_AFTER_ITEMS[activeBeforeAfterIndex]} />
+          </ScrollReveal>
+        </div>
+      </section>
+
+      <section className="py-20 md:py-28 max-w-7xl mx-auto px-6 w-full">
+        <ScrollReveal direction="up" delay={0.1}>
+          <div className="text-center max-w-2xl mx-auto space-y-4 mb-16">
+            <span className="text-xs tracking-[0.25em] uppercase text-caramel-600 font-semibold block">
+              Nghệ Thuật Chế Tác
+            </span>
+            <h2 className="font-serif text-3xl md:text-4xl font-bold text-espresso-900 leading-tight">
+              Quy Trình May Đo Thủ Công Độc Bản
+            </h2>
+            <p className="text-sm text-espresso-600 font-light leading-relaxed">
+              Mỗi tác phẩm tóc giả mất từ 45 đến 70 giờ móc tay tỉ mỉ qua 4 bước chuẩn mực atelier để đạt đến độ hoàn mỹ cao nhất.
+            </p>
+          </div>
+        </ScrollReveal>
+
+        <ScrollStaggerContainer className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {CRAFT_STEPS.map((step, idx) => (
+            <ScrollStaggerItem key={idx}>
+              <div className="bg-white rounded-3xl overflow-hidden border border-sand-200 shadow-sm flex flex-col group hover:shadow-md transition-shadow duration-300 h-full">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-sand-100">
+                  <Image
+                    src={step.image}
+                    alt={step.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute top-3 left-3 bg-espresso-900/80 backdrop-blur-md text-white font-serif text-xs px-3 py-1 rounded-full font-bold">
+                    Bước {step.step}
+                  </div>
+                </div>
+
+                <div className="p-6 flex flex-col flex-1 justify-between">
+                  <div>
+                    <span className="text-[10px] text-caramel-600 font-semibold uppercase tracking-wider block">
+                      {step.subtitle}
+                    </span>
+                    <h3 className="font-serif text-base font-bold text-espresso-900 mt-1 mb-2">
+                      {step.title}
+                    </h3>
+                    <p className="text-xs text-espresso-600 font-light leading-relaxed">
+                      {step.desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </ScrollStaggerItem>
+          ))}
+        </ScrollStaggerContainer>
+      </section>
+
+      <section className="py-20 md:py-28 bg-sand-50 border-t border-sand-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <ScrollReveal direction="up" delay={0.1}>
+            <div className="text-center max-w-2xl mx-auto space-y-4 mb-14">
+              <span className="text-xs tracking-[0.25em] uppercase text-caramel-600 font-semibold block">
+                Gửi Gắm Yêu Thương
+              </span>
+              <h2 className="font-serif text-3xl md:text-4xl font-bold text-espresso-900 leading-tight">
+                Cảm Nhận Từ Khách Hàng
+              </h2>
+              <p className="text-sm text-espresso-600 font-light leading-relaxed">
+                Niềm hạnh phúc lớn nhất của chúng tôi là được nhìn thấy nụ cười tự tin và rạng ngời của từng khách hàng khi đội lên mái tóc Mai Nguyễn.
+              </p>
+            </div>
+          </ScrollReveal>
+
+          <ScrollStaggerContainer className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {TESTIMONIALS.map((testi) => (
+              <ScrollStaggerItem key={testi.id}>
+                <div className="bg-white p-7 rounded-3xl border border-sand-200 shadow-sm flex flex-col justify-between space-y-6 h-full hover:shadow-md transition-shadow">
+                  <div className="space-y-4">
+                    <StarRating rating={testi.rating} size={15} />
+                    <p className="text-espresso-700 text-xs sm:text-sm font-light leading-relaxed italic">
+                      &ldquo;{testi.comment}&rdquo;
+                    </p>
+                  </div>
+
+                  <div className="pt-4 border-t border-sand-100 flex items-center space-x-3.5">
+                    <div className="relative w-11 h-11 rounded-full overflow-hidden border border-sand-300 bg-sand-100 shrink-0">
+                      <Image
+                        src={testi.avatar}
+                        alt={testi.name}
+                        fill
+                        sizes="44px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <h4 className="font-serif text-sm font-bold text-espresso-900 leading-tight">
+                        {testi.name}
+                      </h4>
+                      <p className="text-[11px] text-espresso-500 mt-0.5">
+                        {testi.role} • {testi.location}
+                      </p>
+                      <span className="inline-block text-[10px] text-caramel-600 font-medium bg-sand-100 px-2 py-0.5 rounded-full mt-1">
+                        Mẫu đã dùng: {testi.hairWorn || testi.hairStyle}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </ScrollStaggerItem>
+            ))}
+          </ScrollStaggerContainer>
+        </div>
+      </section>
+
+      <ScrollReveal direction="up" delay={0.1}>
+        <GoogleMapSection />
+      </ScrollReveal>
+
     </div>
   );
 }

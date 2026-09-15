@@ -1,136 +1,163 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
-import Image from "next/image";
+import React, { useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sparkles, Search, Filter, MessageCircle, RotateCcw } from "lucide-react";
 import { useMockStore } from "@/context/mock-store";
-import { formatPrice } from "@/utils/format";
-import { Search, ArrowRight, SlidersHorizontal } from "lucide-react";
+import { LOOKBOOK_CATEGORIES, SALON_INFO } from "@/constants/salon";
+import { LookbookCard } from "@/components/lookbook-card";
+import { ScrollReveal } from "@/components/ui/scroll-reveal";
 
 export default function ProductsPage() {
   const { products } = useMockStore();
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
 
-  // Get unique categories for filters
-  const categories = ["All", ...Array.from(new Set(products.map((p) => p.category)))];
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => {
+      if (!p) return false;
 
-  // Filter products based on search and category selection
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+      // Category matching logic
+      let matchCategory = true;
+      if (selectedCategory !== "all") {
+        const catObj = LOOKBOOK_CATEGORIES.find((c) => c.id === selectedCategory);
+        const selectedName = catObj ? catObj.name.toLowerCase() : selectedCategory.toLowerCase();
+        const prodCat = (p.category || "").toLowerCase();
+
+        matchCategory =
+          prodCat.includes(selectedName) ||
+          selectedName.includes(prodCat) ||
+          (selectedCategory === "wavy" && (prodCat.includes("xoăn") || prodCat.includes("sóng"))) ||
+          (selectedCategory === "bob" && (prodCat.includes("bob") || prodCat.includes("ngang vai") || prodCat.includes("ngắn"))) ||
+          (selectedCategory === "straight" && (prodCat.includes("thẳng") || prodCat.includes("suôn") || prodCat.includes("layer"))) ||
+          (selectedCategory === "topper" && (prodCat.includes("mái") || prodCat.includes("đỉnh") || prodCat.includes("bạc")));
+      }
+
+      // Search query matching logic
+      const query = searchQuery.trim().toLowerCase();
+      const matchSearch =
+        !query ||
+        p.name.toLowerCase().includes(query) ||
+        (p.description || "").toLowerCase().includes(query) ||
+        (p.category || "").toLowerCase().includes(query);
+
+      return matchCategory && matchSearch;
+    });
+  }, [products, selectedCategory, searchQuery]);
 
   return (
-    <div className="bg-background min-h-screen py-16">
-      <div className="max-w-7xl mx-auto px-6 space-y-12">
+    <div className="flex flex-col min-h-screen bg-[#FAF8F5] py-12 md:py-16">
+      <div className="max-w-7xl mx-auto px-6 w-full">
         
-        {/* Header Title */}
-        <div className="text-center space-y-4">
-          <span className="text-xs tracking-[0.3em] uppercase text-gold-500 block">Bộ Sưu Tập</span>
-          <h1 className="text-4xl md:text-5xl font-serif text-gold-gradient font-bold uppercase tracking-wider">
-            Tóc Giả Cao Cấp
-          </h1>
-          <p className="text-neutral-400 text-xs md:text-sm font-light max-w-xl mx-auto leading-relaxed">
-            Khám phá danh sách các tác phẩm tóc giả từ tóc thật tự nhiên được cắt tạo kiểu tỉ mỉ bởi Mai Nguyễn Salon.
-          </p>
-        </div>
+        <ScrollReveal direction="down" delay={0.1}>
+          <div className="text-center max-w-3xl mx-auto space-y-4 mb-12">
+            <div className="inline-flex items-center space-x-2 bg-sand-100 text-caramel-600 px-3.5 py-1 rounded-full text-xs font-medium uppercase tracking-widest">
+              <Sparkles size={13} />
+              <span>Lookbook Tóc Thật Thủ Công</span>
+            </div>
 
-        {/* Filter controls */}
-        <div className="flex flex-col md:flex-row gap-6 justify-between items-center bg-dark-card/50 border border-dark-border p-6 rounded-2xl max-w-5xl mx-auto">
-          {/* Search Input */}
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Tìm kiếm mẫu tóc..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-background border border-dark-border rounded-full pl-11 pr-4 py-2.5 text-xs text-neutral-200 placeholder-neutral-500 focus:outline-none focus:border-gold-500 transition-colors"
-            />
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-espresso-900 leading-tight">
+              Bộ Sưu Tập Tóc Giả Cao Cấp
+            </h1>
+
+            <p className="text-espresso-600 text-sm font-light leading-relaxed max-w-xl mx-auto">
+              Khám phá các tác phẩm tóc giả 100% tóc thật với đa dạng kiểu dáng từ xoăn sóng lụa, bob trẻ trung đến mái phủ bạc. Rê chuột trên mỗi mẫu để xem chi tiết góc nghiêng và da đầu.
+            </p>
           </div>
+        </ScrollReveal>
 
-          {/* Category Tabs */}
-          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-center">
-            <SlidersHorizontal size={14} className="text-gold-500/60 hidden sm:inline mr-2" />
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-full text-[10px] tracking-widest uppercase transition-all duration-300 ${
-                  selectedCategory === category
-                    ? "bg-gold-gradient text-black font-semibold"
-                    : "bg-background text-neutral-400 border border-dark-border hover:text-neutral-200 hover:border-neutral-700"
-                }`}
-              >
-                {category === "All" ? "Tất Cả" : category}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Product Grid */}
-        {filteredProducts.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-dark-border rounded-2xl max-w-2xl mx-auto space-y-4">
-            <p className="text-neutral-400 text-sm">Không tìm thấy sản phẩm nào khớp với bộ lọc.</p>
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedCategory("All");
-              }}
-              className="text-xs text-gold-400 hover:underline"
-            >
-              Đặt lại bộ lọc
-            </button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-            {filteredProducts.map((product) => (
-              <div
-                key={product.id}
-                className="glass-panel group rounded-2xl overflow-hidden border border-dark-border flex flex-col h-full bg-background/40 hover:border-gold-500/20 transition-all duration-300"
-              >
-                {/* Image Container */}
-                <div className="relative aspect-[4/3] w-full overflow-hidden bg-neutral-900">
-                  <Image
-                    src={product.images[0]}
-                    alt={product.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover group-hover:scale-105 transition-transform duration-700"
-                  />
-                  <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-md border border-gold-500/30 px-3 py-1 rounded-full text-[10px] text-gold-300 uppercase tracking-widest font-semibold">
-                    {product.category}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex flex-col flex-grow space-y-4 justify-between">
-                  <div>
-                    <h3 className="font-serif text-lg text-neutral-100 group-hover:text-gold-300 transition-colors font-medium tracking-wide line-clamp-1">
-                      {product.name}
-                    </h3>
-                    <p className="text-neutral-400 text-xs font-light line-clamp-2 leading-relaxed mt-2">
-                      {product.description}
-                    </p>
-                  </div>
-
-                  <div className="flex justify-end items-center pt-4 border-t border-dark-border/40">
-                    <Link
-                      href={`/products/${product.id}`}
-                      className="text-[10px] tracking-widest uppercase text-neutral-300 group-hover:text-gold-400 group-hover:underline flex items-center space-x-1 transition-colors"
-                    >
-                      <span>Xem Chi Tiết</span>
-                      <ArrowRight size={10} />
-                    </Link>
-                  </div>
-                </div>
+        <ScrollReveal direction="up" delay={0.2}>
+          <div className="bg-white rounded-3xl border border-sand-200 p-6 mb-10 shadow-sm">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              
+              <div className="flex flex-wrap items-center gap-2">
+                {LOOKBOOK_CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className={`px-4 py-2 rounded-full text-xs tracking-wider transition-all duration-300 cursor-pointer ${
+                      selectedCategory === cat.id
+                        ? "bg-caramel-500 text-white font-semibold shadow-sm scale-105"
+                        : "bg-sand-50 text-espresso-700 hover:bg-sand-100 border border-sand-200 hover:border-caramel-300"
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
               </div>
-            ))}
+
+              <div className="relative min-w-[260px]">
+                <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-espresso-400" />
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm mẫu tóc..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-sand-50 border border-sand-200 rounded-full pl-9 pr-4 py-2 text-xs text-espresso-900 placeholder-espresso-400 focus:outline-none focus:border-caramel-500 transition-colors"
+                />
+              </div>
+
+            </div>
           </div>
+        </ScrollReveal>
+
+        {filteredProducts.length > 0 ? (
+          <motion.div
+            layout
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredProducts.map((product) => (
+                <motion.div
+                  key={product.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  <LookbookCard product={product} />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16 bg-white rounded-3xl border border-sand-200 p-8 space-y-4"
+          >
+            <Filter size={32} className="text-caramel-400 mx-auto" />
+            <h3 className="font-serif text-lg font-bold text-espresso-900">
+              Không tìm thấy mẫu tóc phù hợp
+            </h3>
+            <p className="text-xs text-espresso-500 max-w-md mx-auto">
+              Không tìm thấy kết quả cho danh mục hoặc từ khóa đã chọn. Vui lòng chọn lại danh mục hoặc gửi yêu cầu may mẫu riêng cho thợ tạo mẫu Mai Nguyễn.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => {
+                  setSelectedCategory("all");
+                  setSearchQuery("");
+                }}
+                className="inline-flex items-center space-x-2 px-5 py-2.5 bg-sand-100 text-espresso-800 text-xs font-semibold rounded-full hover:bg-sand-200 transition-colors cursor-pointer"
+              >
+                <RotateCcw size={13} />
+                <span>Xem Tất Cả Mẫu Tóc</span>
+              </button>
+              <a
+                href={SALON_INFO.zaloUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-2 bg-caramel-500 text-white text-xs px-6 py-2.5 rounded-full font-semibold shadow-sm hover:bg-caramel-600 transition-colors"
+              >
+                <MessageCircle size={14} />
+                <span>Tư Vấn May Đo Qua Zalo</span>
+              </a>
+            </div>
+          </motion.div>
         )}
+
       </div>
     </div>
   );
