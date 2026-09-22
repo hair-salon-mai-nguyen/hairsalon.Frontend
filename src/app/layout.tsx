@@ -27,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="vi"
+      data-scroll-behavior="smooth"
       className={`${playfair.variable} ${montserrat.variable} h-full scroll-smooth antialiased`}
     >
       <body className="bg-background text-foreground min-h-full flex flex-col font-sans">
